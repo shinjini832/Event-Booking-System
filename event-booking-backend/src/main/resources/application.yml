@@ -25,19 +25,23 @@ spring:
     baseline-on-migrate: true
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: shinjini832@gmail.com
-    password: iqkvkqneghkgazyq
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:shinjini832@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:iqkvkqneghkgazyq}
     properties:
       mail:
         smtp:
           auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
           starttls:
             enable: true
             required: true
           ssl:
-            trust: smtp.gmail.com
+            trust: "*"
+            protocols: TLSv1.2
 
 app:
   jwt:
