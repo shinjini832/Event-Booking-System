@@ -27,8 +27,8 @@ public class NotificationService {
     private String fromEmail;
 
     @Async("notificationTaskExecutor")
-    public void sendBookingHoldNotice(Booking booking, String recipientEmail) {
-        String subject = "Seats Held — Complete Your Booking for " + booking.getEvent().getName();
+    public void sendBookingHoldNotice(Long userId, Long bookingId, String eventName, java.math.BigDecimal totalAmount, Instant holdExpiresAt, String recipientEmail) {
+        String subject = "Seats Held — Complete Your Booking for " + eventName;
         String htmlContent = String.format("""
             <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; background-color: #0f172a; color: #f8fafc; border-radius: 12px;">
                 <h2 style="color: #6366f1;">🎟️ Seats Reserved (10-Minute Hold)</h2>
@@ -39,14 +39,14 @@ public class NotificationService {
                 <br/>
                 <p style="color: #94a3b8; font-size: 0.85em;">Event Ticket Booking System</p>
             </div>
-            """, booking.getEvent().getName(), booking.getTotalAmount(), booking.getHoldExpiresAt());
+            """, eventName, totalAmount, holdExpiresAt);
 
-        dispatchNotification(booking.getUser().getId(), booking.getId(), NotificationType.BOOKING_HOLD, recipientEmail, subject, htmlContent);
+        dispatchNotification(userId, bookingId, NotificationType.BOOKING_HOLD, recipientEmail, subject, htmlContent);
     }
 
     @Async("notificationTaskExecutor")
-    public void sendBookingConfirmation(Booking booking, String recipientEmail) {
-        String subject = "Booking Confirmed! — " + booking.getEvent().getName();
+    public void sendBookingConfirmation(Long userId, Long bookingId, String eventName, String venueName, java.math.BigDecimal totalAmount, String recipientEmail) {
+        String subject = "Booking Confirmed! — " + eventName;
         String htmlContent = String.format("""
             <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; background-color: #0f172a; color: #f8fafc; border-radius: 12px;">
                 <h2 style="color: #10b981;">🎉 Booking Confirmation</h2>
@@ -57,14 +57,14 @@ public class NotificationService {
                 <br/>
                 <p style="color: #94a3b8; font-size: 0.85em;">Enjoy the event!</p>
             </div>
-            """, booking.getEvent().getName(), booking.getId(), booking.getTotalAmount(), booking.getEvent().getVenue().getName());
+            """, eventName, bookingId, totalAmount, venueName != null ? venueName : "Main Stadium");
 
-        dispatchNotification(booking.getUser().getId(), booking.getId(), NotificationType.BOOKING_CONFIRMATION, recipientEmail, subject, htmlContent);
+        dispatchNotification(userId, bookingId, NotificationType.BOOKING_CONFIRMATION, recipientEmail, subject, htmlContent);
     }
 
     @Async("notificationTaskExecutor")
-    public void sendCancellationNotice(Booking booking, String recipientEmail, String reason) {
-        String subject = "Booking Cancellation — " + booking.getEvent().getName();
+    public void sendCancellationNotice(Long userId, Long bookingId, String eventName, String recipientEmail, String reason) {
+        String subject = "Booking Cancellation — " + eventName;
         String htmlContent = String.format("""
             <div style="font-family: Arial, sans-serif; max-width: 600px; padding: 20px; background-color: #0f172a; color: #f8fafc; border-radius: 12px;">
                 <h2 style="color: #ef4444;">Booking Cancelled</h2>
@@ -72,9 +72,9 @@ public class NotificationService {
                 <p>Reason: %s</p>
                 <p>Released seats are now available for re-booking.</p>
             </div>
-            """, booking.getId(), booking.getEvent().getName(), reason);
+            """, bookingId, eventName, reason);
 
-        dispatchNotification(booking.getUser().getId(), booking.getId(), NotificationType.BOOKING_CANCELLATION, recipientEmail, subject, htmlContent);
+        dispatchNotification(userId, bookingId, NotificationType.BOOKING_CANCELLATION, recipientEmail, subject, htmlContent);
     }
 
     private void dispatchNotification(Long userId, Long bookingId, NotificationType type, String toEmail, String subject, String bodyHtml) {

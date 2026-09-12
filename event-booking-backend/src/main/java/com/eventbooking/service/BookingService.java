@@ -114,7 +114,7 @@ public class BookingService {
         savedBooking.setBookingSeats(bookingSeats);
 
         // Trigger async hold notification
-        notificationService.sendBookingHoldNotice(savedBooking, user.getEmail());
+        notificationService.sendBookingHoldNotice(user.getId(), savedBooking.getId(), event.getName(), totalAmount, holdExpiration, user.getEmail());
 
         return mapToBookingResponse(savedBooking);
     }
@@ -154,7 +154,7 @@ public class BookingService {
         Booking confirmedBooking = bookingRepository.save(booking);
 
         // Trigger async confirmation notification
-        notificationService.sendBookingConfirmation(confirmedBooking, booking.getUser().getEmail());
+        notificationService.sendBookingConfirmation(booking.getUser().getId(), confirmedBooking.getId(), booking.getEvent().getName(), booking.getEvent().getVenue().getName(), confirmedBooking.getTotalAmount(), booking.getUser().getEmail());
 
         return mapToBookingResponse(confirmedBooking);
     }
@@ -180,7 +180,7 @@ public class BookingService {
         Booking cancelledBooking = bookingRepository.save(booking);
 
         // Async cancellation notice
-        notificationService.sendCancellationNotice(cancelledBooking, booking.getUser().getEmail(), reason != null ? reason : "User requested cancellation");
+        notificationService.sendCancellationNotice(booking.getUser().getId(), cancelledBooking.getId(), booking.getEvent().getName(), booking.getUser().getEmail(), reason != null ? reason : "User requested cancellation");
 
         return mapToBookingResponse(cancelledBooking);
     }
