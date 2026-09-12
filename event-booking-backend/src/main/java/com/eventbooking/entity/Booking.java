@@ -31,7 +31,8 @@ public class Booking {
     private Event event;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 50)
     private BookingStatus status;
 
     @Column(name = "hold_expires_at")

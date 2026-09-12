@@ -30,7 +30,8 @@ public class EventSeat {
     private Seat seat;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 50)
     private SeatStatus status;
 
     @Column(nullable = false, precision = 10, scale = 2)

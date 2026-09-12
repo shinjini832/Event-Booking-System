@@ -26,7 +26,8 @@ public class Notification {
     private Long bookingId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 50)
     private NotificationType type;
 
     @Column(nullable = false)
