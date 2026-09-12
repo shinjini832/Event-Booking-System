@@ -26,22 +26,24 @@ spring:
 
   mail:
     host: ${SPRING_MAIL_HOST:smtp.gmail.com}
-    port: ${SPRING_MAIL_PORT:587}
+    port: ${SPRING_MAIL_PORT:465}
     username: ${SPRING_MAIL_USERNAME:shinjini832@gmail.com}
     password: ${SPRING_MAIL_PASSWORD:iqkvkqneghkgazyq}
     properties:
       mail:
         smtp:
           auth: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-          starttls:
-            enable: true
-            required: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
           ssl:
+            enable: true
             trust: "*"
             protocols: TLSv1.2
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+            fallback: false
 
 app:
   jwt:
