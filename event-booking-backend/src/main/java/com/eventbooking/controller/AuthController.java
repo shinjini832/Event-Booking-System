@@ -8,6 +8,7 @@ import com.eventbooking.dto.UserResponseDto;
 import com.eventbooking.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,6 +38,9 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(authService.getCurrentUser(userDetails.getUsername()));
     }
 }

@@ -20,8 +20,20 @@ spring:
     enabled: false
 
   mail:
-    host: localhost
-    port: 2525
+    host: smtp.gmail.com
+    port: 587
+    username: shinjini832@gmail.com
+    password: iqkvkqneghkgazyq
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
+
 
 app:
   jwt:

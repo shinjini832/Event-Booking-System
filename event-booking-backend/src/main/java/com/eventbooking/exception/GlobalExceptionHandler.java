@@ -46,6 +46,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request.getRequestURI(), null);
     }
 
+    @ExceptionHandler({org.springframework.security.authentication.BadCredentialsException.class, org.springframework.security.core.userdetails.UsernameNotFoundException.class})
+    public ResponseEntity<ErrorResponseDto> handleBadCredentials(Exception ex, HttpServletRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid email or password.", request.getRequestURI(), null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleValidationErrors(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();

@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # 1. MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: event_booking_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-event_booking_db}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${MYSQL_USER:-appuser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Spring Boot Backend Service
+  backend:
+    build:
+      context: ./event-booking-backend
+      dockerfile: Dockerfile
+    container_name: event_booking_backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-event_booking_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-appuser}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-apppassword}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-shinjini832@gmail.com}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-iqkvkqneghkgazyq}
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost,http://frontend}
+    ports:
+      - "8080:8080"
+
+  # 3. React Frontend Service (Nginx)
+  frontend:
+    build:
+      context: ./event-booking-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080/api}
+    container_name: event_booking_frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  mysql_data:

@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import java.time.Instant;
 
 @Slf4j
@@ -21,6 +22,9 @@ public class NotificationService {
 
     private final JavaMailSender mailSender;
     private final NotificationRepository notificationRepository;
+
+    @Value("${spring.mail.username:shinjini832@gmail.com}")
+    private String fromEmail;
 
     @Async("notificationTaskExecutor")
     public void sendBookingHoldNotice(Booking booking, String recipientEmail) {
@@ -90,7 +94,7 @@ public class NotificationService {
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(bodyHtml, true);
-            helper.setFrom("noreply@eventbooking.com");
+            helper.setFrom(fromEmail, "EventPass Tickets");
 
             mailSender.send(mimeMessage);
             saved.setStatus("SENT");

@@ -26,16 +26,19 @@ spring:
     baseline-on-migrate: true
 
   mail:
-    host: ${SPRING_MAIL_HOST:sandbox.smtp.mailtrap.io}
-    port: ${SPRING_MAIL_PORT:2525}
-    username: ${SPRING_MAIL_USERNAME:mailtrap_user}
-    password: ${SPRING_MAIL_PASSWORD:mailtrap_pass}
+    host: smtp.gmail.com
+    port: 587
+    username: shinjini832@gmail.com
+    password: iqkvkqneghkgazyq
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com
 
 app:
   jwt:
