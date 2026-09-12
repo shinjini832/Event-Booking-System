@@ -25,6 +25,11 @@ const Navbar = () => {
         {user && (
           <Link to="/my-bookings" className="nav-link">My Tickets</Link>
         )}
+        {user && (user.role === 'ORGANIZER' || user.role === 'ADMIN') && (
+          <Link to="/create-event" className="nav-link btn-link" style={{ color: '#a5b4fc', fontWeight: '700' }}>
+            + Create Event
+          </Link>
+        )}
       </div>
 
       <div className="nav-auth">

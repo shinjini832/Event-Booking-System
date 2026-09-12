@@ -8,6 +8,7 @@ import EventList from './pages/EventList';
 import EventDetail from './pages/EventDetail';
 import BookingConfirmation from './pages/BookingConfirmation';
 import MyBookings from './pages/MyBookings';
+import CreateEvent from './pages/CreateEvent';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -38,6 +39,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MyBookings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create-event"
+                element={
+                  <ProtectedRoute>
+                    <CreateEvent />
                   </ProtectedRoute>
                 }
               />

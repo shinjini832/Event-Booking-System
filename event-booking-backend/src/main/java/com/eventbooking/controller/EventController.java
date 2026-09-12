@@ -28,6 +28,20 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEvents(city, keyword, pageable));
     }
 
+    @PostMapping
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
+    public ResponseEntity<EventResponseDto> createEvent(
+            @org.springframework.security.core.annotation.AuthenticationPrincipal com.eventbooking.security.UserPrincipal userPrincipal,
+            @jakarta.validation.Valid @RequestBody com.eventbooking.dto.CreateEventRequestDto request
+    ) {
+        return ResponseEntity.ok(eventService.createEvent(userPrincipal.getId(), request));
+    }
+
+    @GetMapping("/venues")
+    public ResponseEntity<List<com.eventbooking.dto.VenueResponseDto>> getVenues() {
+        return ResponseEntity.ok(eventService.getAllVenues());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<EventResponseDto> getEventById(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getEventById(id));

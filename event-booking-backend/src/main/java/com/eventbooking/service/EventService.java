@@ -10,6 +10,8 @@ import com.eventbooking.exception.ResourceNotFoundException;
 import com.eventbooking.repository.EventRepository;
 import com.eventbooking.repository.EventSeatRepository;
 import com.eventbooking.repository.EventSpecification;
+import com.eventbooking.repository.SeatRepository;
+import com.eventbooking.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,59 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final EventSeatRepository eventSeatRepository;
+    private final VenueRepository venueRepository;
+    private final SeatRepository seatRepository;
+
+    @Transactional
+    public EventResponseDto createEvent(Long organizerId, com.eventbooking.dto.CreateEventRequestDto request) {
+        com.eventbooking.entity.Venue venue = venueRepository.findById(request.getVenueId())
+                .orElseThrow(() -> new ResourceNotFoundException("Venue not found: " + request.getVenueId()));
+
+        Event event = Event.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .venue(venue)
+                .organizerId(organizerId)
+                .eventDate(request.getEventDate())
+                .basePrice(request.getBasePrice())
+                .status(com.eventbooking.enums.EventStatus.SCHEDULED)
+                .build();
+
+        Event savedEvent = eventRepository.save(event);
+
+        // Populate venue seats as EventSeat instances
+        List<com.eventbooking.entity.Seat> seats = seatRepository.findByVenueId(venue.getId());
+        List<EventSeat> eventSeats = new java.util.ArrayList<>();
+
+        for (com.eventbooking.entity.Seat seat : seats) {
+            java.math.BigDecimal seatPrice = "VIP".equalsIgnoreCase(seat.getSection()) 
+                    ? request.getBasePrice().multiply(new java.math.BigDecimal("1.50")) 
+                    : request.getBasePrice();
+
+            eventSeats.add(EventSeat.builder()
+                    .event(savedEvent)
+                    .seat(seat)
+                    .status(SeatStatus.AVAILABLE)
+                    .price(seatPrice)
+                    .version(0L)
+                    .build());
+        }
+
+        eventSeatRepository.saveAll(eventSeats);
+        return mapToEventDto(savedEvent);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VenueResponseDto> getAllVenues() {
+        return venueRepository.findAll().stream()
+                .map(v -> VenueResponseDto.builder()
+                        .id(v.getId())
+                        .name(v.getName())
+                        .address(v.getAddress())
+                        .totalCapacity(v.getTotalCapacity())
+                        .build())
+                .toList();
+    }
 
     @Transactional(readOnly = true)
     public Page<EventResponseDto> getEvents(String city, String keyword, Pageable pageable) {
