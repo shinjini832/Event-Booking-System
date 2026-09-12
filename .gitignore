@@ -1,0 +1,16 @@
+# Root Gitignore
+.idea/
+.vscode/
+*.iml
+.DS_Store
+*.log
+
+# Backend build outputs
+event-booking-backend/target/
+event-booking-backend/.mvn/
+event-booking-backend/*.log
+
+# Frontend build outputs
+event-booking-frontend/node_modules/
+event-booking-frontend/dist/
+event-booking-frontend/.vite/
