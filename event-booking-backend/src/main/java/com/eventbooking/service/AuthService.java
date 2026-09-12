@@ -32,6 +32,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenRevocationService tokenRevocationService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -74,9 +75,8 @@ public class AuthService {
                 .orElseThrow(() -> new BadRequestException("Invalid refresh token"));
 
         if (storedToken.isRevoked()) {
-            // Theft detection! Revoke entire token family
-            refreshTokenRepository.findByFamilyId(storedToken.getFamilyId()).forEach(t -> t.setRevoked(true));
-            refreshTokenRepository.saveAll(refreshTokenRepository.findByFamilyId(storedToken.getFamilyId()));
+            // Theft detection! Revoke entire token family in isolated transaction
+            tokenRevocationService.revokeFamily(storedToken.getFamilyId());
             throw new BadRequestException("Token reuse detected! All sessions revoked for security.");
         }
 
@@ -135,6 +135,13 @@ public class AuthService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .build();
+    }
+
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void revokeFamily(String familyId) {
+        var family = refreshTokenRepository.findByFamilyId(familyId);
+        family.forEach(t -> t.setRevoked(true));
+        refreshTokenRepository.saveAllAndFlush(family);
     }
 
     private String hashToken(String token) {
