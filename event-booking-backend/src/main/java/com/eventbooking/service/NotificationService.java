@@ -77,6 +77,9 @@ public class NotificationService {
         dispatchNotification(userId, bookingId, NotificationType.BOOKING_CANCELLATION, recipientEmail, subject, htmlContent);
     }
 
+    @Value("${resend.api.key:${RESEND_API_KEY:}}")
+    private String resendApiKey;
+
     private void dispatchNotification(Long userId, Long bookingId, NotificationType type, String toEmail, String subject, String bodyHtml) {
         Notification notification = Notification.builder()
                 .userId(userId)
@@ -88,6 +91,8 @@ public class NotificationService {
 
         Notification saved = notificationRepository.save(notification);
 
+        // Try raw SMTP first
+        boolean sent = false;
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
@@ -97,14 +102,58 @@ public class NotificationService {
             helper.setFrom(fromEmail, "EventPass Tickets");
 
             mailSender.send(mimeMessage);
+            sent = true;
             saved.setStatus("SENT");
             saved.setSentAt(Instant.now());
             log.info("Async SMTP email sent successfully to {} for notification #{}", toEmail, saved.getId());
         } catch (Exception e) {
-            saved.setStatus("FAILED");
-            log.error("SMTP delivery failed for notification #{}. Fallback logged locally: {}", saved.getId(), e.getMessage());
+            log.warn("Raw SMTP port blocked by cloud host for notification #{}. Attempting HTTPS REST API fallback...", saved.getId());
+            // Attempt HTTPS REST API fallback (Port 443, never blocked by cloud firewalls)
+            if (tryResendHttpsFallback(toEmail, subject, bodyHtml)) {
+                sent = true;
+                saved.setStatus("SENT");
+                saved.setSentAt(Instant.now());
+            } else {
+                saved.setStatus("FAILED");
+                log.error("SMTP & HTTPS email delivery blocked by cloud firewall for notification #{}. Ticket is confirmed in database.", saved.getId());
+            }
         } finally {
             notificationRepository.save(saved);
         }
+    }
+
+    private boolean tryResendHttpsFallback(String toEmail, String subject, String bodyHtml) {
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            log.info("No RESEND_API_KEY configured. To enable live email delivery on Render's firewall-restricted network, set RESEND_API_KEY environment variable.");
+            return false;
+        }
+
+        try {
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            String jsonPayload = "{"
+                    + "\"from\":\"EventPass Tickets <onboarding@resend.dev>\","
+                    + "\"to\":[\"" + toEmail + "\"],"
+                    + "\"subject\":\"" + subject.replace("\"", "\\\"") + "\","
+                    + "\"html\":\"" + bodyHtml.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "") + "\""
+                    + "}";
+
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey.trim())
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("HTTPS REST Email delivered successfully via Resend API to {}", toEmail);
+                return true;
+            } else {
+                log.warn("Resend API response status {}: {}", response.statusCode(), response.body());
+            }
+        } catch (Exception ex) {
+            log.error("HTTPS REST Email fallback failed: {}", ex.getMessage());
+        }
+        return false;
     }
 }
