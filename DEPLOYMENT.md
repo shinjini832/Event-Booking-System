@@ -33,8 +33,8 @@ This guide outlines the exact step-by-step procedure to deploy the **Event Booki
    - `SPRING_DATASOURCE_PASSWORD` = `<YOUR-MYSQL-PASSWORD>`
    - `SPRING_MAIL_HOST` = `smtp.gmail.com`
    - `SPRING_MAIL_PORT` = `587`
-   - `SPRING_MAIL_USERNAME` = `shinjini832@gmail.com`
-   - `SPRING_MAIL_PASSWORD` = `iqkvkqneghkgazyq`
+   - `SPRING_MAIL_USERNAME` = `your_email@gmail.com`
+   - `SPRING_MAIL_PASSWORD` = `your_app_password`
    - `JWT_SECRET` = `404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970`
    - `CORS_ALLOWED_ORIGINS` = `https://<YOUR-VERCEL-APP-NAME>.vercel.app`
 6. Click **Create Web Service**.

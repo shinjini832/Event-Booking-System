@@ -23,7 +23,7 @@ public class NotificationService {
     private final JavaMailSender mailSender;
     private final NotificationRepository notificationRepository;
 
-    @Value("${spring.mail.username:shinjini832@gmail.com}")
+    @Value("${spring.mail.username:noreply@eventpass.com}")
     private String fromEmail;
 
     @Async("notificationTaskExecutor")
